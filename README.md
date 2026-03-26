@@ -1,6 +1,5 @@
 # PDF-Genie-Web
 GDgoC 401 Study (Vibe Coding Project)
----
 ## **추천 기술 스택**
 
 **FastAPI(백엔드) + React(프론트) + ChromaDB(벡터DB)** 조합이 가장 검증된 스택입니다. 실제로 이 구성으로 만들어진 PDF Q&A 프로젝트들이 GitHub에 다수 있어요.
