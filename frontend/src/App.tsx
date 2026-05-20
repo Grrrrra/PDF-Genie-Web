@@ -174,8 +174,38 @@ export default function App() {
                         cursor: loading ? "not-allowed" : "pointer",
                     }}
                 >
-                    {loading && answer === null ? "답변 생성 중..." : "질문하기"}
+                    질문하기
                 </button>
+
+                {/* 로딩 스피너 */}
+                {loading && (
+                    <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        marginTop: 16,
+                        color: "#01696f",
+                        fontSize: 14,
+                    }}>
+                        <svg
+                            width="18" height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            style={{ animation: "spin 1s linear infinite" }}
+                        >
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                        </svg>
+                        답변 생성 중...
+                        <style>{`
+                            @keyframes spin {
+                                from { transform: rotate(0deg); }
+                                to { transform: rotate(360deg); }
+                            }
+                        `}</style>
+                    </div>
+                )}
 
                 {/* 에러 메시지 */}
                 {error && (

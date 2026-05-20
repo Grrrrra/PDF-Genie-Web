@@ -1,7 +1,8 @@
 // src/components/AnswerPanel.tsx
 
+import ReactMarkdown from "react-markdown";
 import SourceCard from "./SourceCard";
-import { type AskResult } from "../api";
+import type { AskResult } from "../api";
 
 interface AnswerPanelProps {
     data: AskResult | null;
@@ -21,12 +22,70 @@ export default function AnswerPanel({ data }: AnswerPanelProps) {
                 background: "#f7f6f2",
                 borderRadius: 8,
                 padding: "16px 20px",
-                whiteSpace: "pre-wrap",
                 lineHeight: 1.8,
                 fontSize: 15,
                 color: "#28251d",
             }}>
-                {answer}
+                <ReactMarkdown
+                    components={{
+                        // 코드 블록 스타일
+                        code({ children }) {
+                            return (
+                                <code style={{
+                                    background: "#e8e6e0",
+                                    borderRadius: 4,
+                                    padding: "2px 6px",
+                                    fontSize: 13,
+                                    fontFamily: "monospace",
+                                }}>
+                                    {children}
+                                </code>
+                            );
+                        },
+                        // 코드 펜스 블록
+                        pre({ children }) {
+                            return (
+                                <pre style={{
+                                    background: "#1c1b19",
+                                    color: "#cdccca",
+                                    borderRadius: 6,
+                                    padding: "12px 16px",
+                                    overflowX: "auto",
+                                    fontSize: 13,
+                                    lineHeight: 1.6,
+                                    margin: "10px 0",
+                                }}>
+                                    {children}
+                                </pre>
+                            );
+                        },
+                        // 강조 텍스트
+                        strong({ children }) {
+                            return (
+                                <strong style={{ color: "#01696f" }}>
+                                    {children}
+                                </strong>
+                            );
+                        },
+                        // 리스트 간격
+                        ul({ children }) {
+                            return (
+                                <ul style={{ paddingLeft: 20, margin: "8px 0" }}>
+                                    {children}
+                                </ul>
+                            );
+                        },
+                        li({ children }) {
+                            return (
+                                <li style={{ marginBottom: 4 }}>
+                                    {children}
+                                </li>
+                            );
+                        },
+                    }}
+                >
+                    {answer}
+                </ReactMarkdown>
             </div>
 
             {/* PDF 출처 */}
