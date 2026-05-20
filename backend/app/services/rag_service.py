@@ -1,7 +1,7 @@
 from langchain_ollama import ChatOllama
 from app.services.vector_service import get_vectorstore
 from app.services.web_search_service import search_web
-from app.services.query_service import classify_question_type, rewrite_web_query
+from app.services.query_service import classify_question_type, rewrite_web_query, preprocess_umask_hint
 from app.services.prompt_service import build_answer_format
 
 # LLM — 모듈 로드 시 1회만 초기화
@@ -10,7 +10,8 @@ llm = ChatOllama(
     temperature=0.1
 )
 
-# 웹 출처로 절대 쓰면 안 되는 도메인 목록
+# ← query = preprocess_umask_hint(query) 이 줄 삭제
+
 _BLOCKED_DOMAINS = {
     "tenforums.com", "namu.wiki", "namuwiki.mirror.wiki",
     "reddit.com", "quora.com", "answers.com",
@@ -20,26 +21,22 @@ _BLOCKED_DOMAINS = {
 
 
 def _is_valid_web_result(item: dict, query_keywords: list[str]) -> bool:
-    """
-    웹 검색 결과가 질문과 관련 있는지 검증.
-    - 차단 도메인 제외
-    - 제목/본문에 쿼리 키워드가 하나도 없으면 제외
-    """
     href = item.get("href", "").lower()
     title = item.get("title", "").lower()
     body = item.get("body", "").lower()
 
-    # 차단 도메인 필터
     for domain in _BLOCKED_DOMAINS:
         if domain in href:
             return False
 
-    # 키워드 관련도 필터 — 제목+본문에 키워드 하나라도 있어야 통과
     combined = title + " " + body
     return any(kw.lower() in combined for kw in query_keywords)
 
 
 def ask_question(query: str, use_web: bool = True):
+
+    # ── 0. 질문 전처리 (umask 등 계산 힌트 주입) ──
+    query = preprocess_umask_hint(query)  # ← 여기로 이동
 
     # ── 1. 질문 분류 ──────────────────────────────
     question_type = classify_question_type(query)
@@ -125,6 +122,7 @@ def ask_question(query: str, use_web: bool = True):
 7. PDF와 웹 모두 관련 내용이 없으면 "문서에서 해당 내용을 찾을 수 없습니다."라고 답해라.
 
 [수치 / 계산 / 알고리즘 규칙]
+
 8. 비트 연산, 파일 권한, 메모리 주소, 알고리즘 계산이 포함된 질문은 반드시 단계별로 계산 과정을 보여줘라.
 9. umask 계산은 반드시 AND NOT 비트 연산을 사용해라.
    공식: 실제권한 = 요청권한 & (~umask)

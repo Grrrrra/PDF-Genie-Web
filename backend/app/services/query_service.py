@@ -7,6 +7,19 @@ from app.services.keyword_map import KEYWORD_MAP
 # ─────────────────────────────────────────
 # 질문 유형 분류
 # ─────────────────────────────────────────
+def preprocess_umask_hint(query: str) -> str:
+    """umask 관련 질문이면 계산 힌트를 쿼리에 추가"""
+    if "umask" in query.lower():
+        match = re.search(r"umask\s*\(?\s*0?(\d+)\s*\)?", query)
+        if match:
+            val = int(match.group(1), 8)  # 8진수 파싱
+            hint = (
+                f"\n[계산 힌트] umask({oct(val)}) 적용 공식: "
+                f"실제권한 = 요청권한 & (~{oct(val)}) "
+                f"(~{oct(val)} = {oct(~val & 0o777)})"
+            )
+            return query + hint
+    return query
 
 def classify_question_type(question: str) -> str:
     q = question.lower().strip()
