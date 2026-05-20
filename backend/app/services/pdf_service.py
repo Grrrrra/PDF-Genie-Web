@@ -37,8 +37,8 @@ def ingest_pdf(file_path: str, original_filename: str):
     docs = loader.load()
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=150,
+        chunk_size=400,
+        chunk_overlap=80,
         separators=["\n\n", "\n", " ", ""]
     )
     chunks = splitter.split_documents(docs)
