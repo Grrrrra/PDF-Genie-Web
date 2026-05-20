@@ -37,7 +37,8 @@ def ask_question(query: str, use_web: bool = True):
 
     # ── 0. 질문 전처리 (umask 등 계산 힌트 주입) ──
     query = preprocess_umask_hint(query)  # ← 여기로 이동
-
+    print(f"[DEBUG] 전처리된 쿼리: {query}")
+    
     # ── 1. 질문 분류 ──────────────────────────────
     question_type = classify_question_type(query)
     answer_format = build_answer_format(question_type)

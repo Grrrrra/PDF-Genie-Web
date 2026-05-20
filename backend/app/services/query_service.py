@@ -8,18 +8,44 @@ from app.services.keyword_map import KEYWORD_MAP
 # 질문 유형 분류
 # ─────────────────────────────────────────
 def preprocess_umask_hint(query: str) -> str:
-    """umask 관련 질문이면 계산 힌트를 쿼리에 추가"""
-    if "umask" in query.lower():
-        match = re.search(r"umask\s*\(?\s*0?(\d+)\s*\)?", query)
-        if match:
-            val = int(match.group(1), 8)  # 8진수 파싱
-            hint = (
-                f"\n[계산 힌트] umask({oct(val)}) 적용 공식: "
-                f"실제권한 = 요청권한 & (~{oct(val)}) "
-                f"(~{oct(val)} = {oct(~val & 0o777)})"
-            )
-            return query + hint
-    return query
+    """umask 관련 질문이면 단계별 계산 결과를 쿼리에 직접 주입"""
+    if "umask" not in query.lower():
+        return query
+
+    match = re.search(r"umask\s*\(?\s*0?([0-7]{1,3})\s*\)?", query)
+    if not match:
+        return query
+
+    val = int(match.group(1), 8)           # 8진수 파싱
+    default_file = 0o666                   # 일반 파일 기본 권한
+    default_dir  = 0o777                   # 디렉토리 기본 권한
+
+    result_file = default_file & (~val & 0o777)
+    result_dir  = default_dir  & (~val & 0o777)
+
+    def to_rwx(mode: int) -> str:
+        bits = ["r", "w", "x"]
+        result = ""
+        for shift in [6, 3, 0]:
+            for i, bit in enumerate(bits):
+                result += bit if (mode >> (shift + (2 - i))) & 1 else "-"
+        return result
+
+    hint = f"""
+[umask 계산 결과 — 반드시 아래 값을 그대로 사용해라]
+umask 값     : {oct(val)} ({val:03b} {(val>>3 & 7):03b} {(val & 7):03b})
+AND NOT 공식 : 실제권한 = 요청권한 & (~umask)
+~umask       : ~{oct(val)} = {oct(~val & 0o777)}
+
+일반 파일 (기본 0666):
+  0666 & {oct(~val & 0o777)} = {oct(result_file)} → {to_rwx(result_file)}
+
+디렉토리 (기본 0777):
+  0777 & {oct(~val & 0o777)} = {oct(result_dir)} → {to_rwx(result_dir)}
+
+위 결과가 정답이다. 절대 빼기(-) 연산을 사용하지 마라.
+"""
+    return query + hint
 
 def classify_question_type(question: str) -> str:
     q = question.lower().strip()
